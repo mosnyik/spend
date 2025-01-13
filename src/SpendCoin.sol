@@ -34,7 +34,7 @@ contract SpendCoin is Ownable {
         require(msg.value >= _amount, "INSUFFICIENT BNB BALANCE");
         require(msg.value > 0, "NO BNB RECEIVED");
         require(recipient != address(0), "INVALID RECIPIENT");
-        (bool sent, ) = recipient.call{value: _amount}("");
+        (bool sent,) = recipient.call{value: _amount}("");
         require(sent, "SENDING BNB FAILED");
 
         emit BNBTransferred(msg.sender, recipient, _amount); // Emit event
@@ -43,7 +43,7 @@ contract SpendCoin is Ownable {
     receive() external payable {
         require(msg.value > 0, "NO ETH RECEIVED");
         require(recipient != address(0), "INVALID RECIPIENT");
-        (bool sent, ) = recipient.call{value: msg.value}("");
+        (bool sent,) = recipient.call{value: msg.value}("");
         require(sent, "SENDING ETH FAILED");
     }
 

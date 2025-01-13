@@ -2,17 +2,16 @@
 pragma solidity ^0.8.25;
 
 contract SpendCoin {
-    address public owner; 
+    address public owner;
     address public recipient;
     mapping(address => bool) public allowedRecipients;
 
-      // Define Events
+    // Define Events
     event TRXRecipientAdded(address indexed addedBy, address indexed newRecipient);
     event TRXRecipientUpdated(address indexed updatedBy, address indexed newRecipient);
     event TRXTransferred(address indexed sender, address indexed recipient, uint256 amount);
     event TRXOwnerTransferred(address indexed previousOwner, address indexed newOwner);
-    event TRXReceived( address indexed sender, address indexed reciever, uint256 amount);
-
+    event TRXReceived(address indexed sender, address indexed reciever, uint256 amount);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "NOT OWNER");
@@ -33,7 +32,7 @@ contract SpendCoin {
     function addAllowedRecipient(address newAllowedRecipient) external onlyOwner {
         if (!isAllowedRecipient(newAllowedRecipient)) {
             allowedRecipients[newAllowedRecipient] = true;
-            emit TRXRecipientAdded(msg.sender, newAllowedRecipient); 
+            emit TRXRecipientAdded(msg.sender, newAllowedRecipient);
         }
     }
 
@@ -44,7 +43,7 @@ contract SpendCoin {
         require(recipient != address(0), "INVALID RECIPIENT");
 
         // Sending TRX to the recipient
-        (bool sent, ) = recipient.call{value: _amount}("");
+        (bool sent,) = recipient.call{value: _amount}("");
         require(sent, "SENDING TRX FAILED");
         // emit an event to log the transfer
         emit TRXTransferred(msg.sender, recipient, _amount);
@@ -56,11 +55,11 @@ contract SpendCoin {
         require(recipient != address(0), "INVALID RECIPIENT");
 
         // Forward the received TRX to the recipient
-        (bool sent, ) = recipient.call{value: msg.value}("");
+        (bool sent,) = recipient.call{value: msg.value}("");
         require(sent, "SENDING TRX FAILED");
 
         // log event for fallback transfers
-        emit TRXReceived(msg.sender, recipient,msg.value);
+        emit TRXReceived(msg.sender, recipient, msg.value);
     }
 
     // Update the recipient address
@@ -70,7 +69,7 @@ contract SpendCoin {
         recipient = _newRecipient;
 
         // Emit an event for recipient updates
-        emit TRXRecipientUpdated(msg.sender,_newRecipient);
+        emit TRXRecipientUpdated(msg.sender, _newRecipient);
     }
 
     // Set a new owner
