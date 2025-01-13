@@ -7,6 +7,12 @@ contract SpendCoin is Ownable {
     address public recipient;
     mapping(address => bool) public allowedRecipients;
 
+    // Define Events
+    event RecipientAdded(address indexed addedBy, address indexed newRecipient);
+    event RecipientUpdated(address indexed updatedBy, address indexed newRecipient);
+    event BNBTransferred(address indexed sender, address indexed recipient, uint256 amount);
+    event OwnerTransferred(address indexed previousOwner, address indexed newOwner);
+
     constructor(address payable _receiver) Ownable(_receiver) {
         require(_receiver != address(0), "INVALID ADDRESS");
         recipient = _receiver;
@@ -20,40 +26,37 @@ contract SpendCoin is Ownable {
     function addAllowedRecipient(address newAllowedRecipient) external onlyOwner {
         if (!isAllowedRecipient(newAllowedRecipient)) {
             allowedRecipients[newAllowedRecipient] = true;
+            emit RecipientAdded(msg.sender, newAllowedRecipient); // Emit event
         }
     }
 
-    // 58211 gas for the transaction
-    // worse case based on recent gas prices 0.0396305 ETH at (700 Gwei)
-    // best case based on recent gas prices 0.000283075 ETH at  (5 Gwei)
-    // best case based on recent gas prices 0.0007903854 ETH at (13.96 Gwei)
-
     function transferBNB(uint256 _amount) external payable {
         require(msg.value >= _amount, "INSUFFICIENT BNB BALANCE");
-        require(msg.value > 0, "NO BNB RECIEVED");
+        require(msg.value > 0, "NO BNB RECEIVED");
         require(recipient != address(0), "INVALID RECIPIENT");
-        (bool sent,) = recipient.call{value: _amount}("");
+        (bool sent, ) = recipient.call{value: _amount}("");
         require(sent, "SENDING BNB FAILED");
+
+        emit BNBTransferred(msg.sender, recipient, _amount); // Emit event
     }
-    // 56671 gas for the transaction
-    // worse case based on recent gas prices 0.0396305 ETH at (700 Gwei)
-    // best case based on recent gas prices 0.000283075 ETH at  (5 Gwei)
-    // best case based on recent gas prices 0.0007903854 ETH at (13.96 Gwei)
 
     receive() external payable {
-        require(msg.value > 0, "NO ETH RECIEVED");
+        require(msg.value > 0, "NO ETH RECEIVED");
         require(recipient != address(0), "INVALID RECIPIENT");
-        (bool sent,) = recipient.call{value: msg.value}("");
+        (bool sent, ) = recipient.call{value: msg.value}("");
         require(sent, "SENDING ETH FAILED");
     }
 
-    function updateRecipient(address payable _newRecipient) external {
+    function updateRecipient(address payable _newRecipient) external onlyOwner {
         require(_newRecipient != address(0), "INVALID RECIPIENT");
         require(isAllowedRecipient(_newRecipient), "CAN'T SET THIS RECIPIENT");
         recipient = _newRecipient;
+
+        emit RecipientUpdated(msg.sender, _newRecipient); // Emit event
     }
 
     function setNewOwner(address _newOwner) external onlyOwner {
         transferOwnership(_newOwner);
+        emit OwnerTransferred(msg.sender, _newOwner); // Emit event
     }
 }
